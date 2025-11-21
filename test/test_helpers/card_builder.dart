@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 
 Widget? genericBuilder(
   BuildContext context,
   int index,
-  int horizontalPercentage,
-  int verticalPercentage,
+  bool isTopIndex,
+  double? swipeProgressPercentage,
+  CardSwiperDirection? swipeDirection,
 ) {
   return Container(
     width: 200,

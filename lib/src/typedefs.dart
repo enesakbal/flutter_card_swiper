@@ -17,8 +17,9 @@ typedef CardSwiperOnSwipeUpdate = void Function(
 typedef NullableCardBuilder = Widget? Function(
   BuildContext context,
   int index,
-  int horizontalOffsetPercentage,
-  int verticalOffsetPercentage,
+  bool isTopIndex,
+  double? swipeProgressPercentage,
+  CardSwiperDirection? swipeDirection,
 );
 
 typedef CardSwiperDirectionChange = void Function(

@@ -50,8 +50,9 @@ class _ExamplePageState extends State<Example> {
                 cardBuilder: (
                   context,
                   index,
-                  horizontalThresholdPercentage,
-                  verticalThresholdPercentage,
+                  isTopIndex,
+                  swipeProgressPercentage,
+                  swipeDirection,
                 ) =>
                     cards[index],
               ),
@@ -70,8 +71,7 @@ class _ExamplePageState extends State<Example> {
                     child: const Icon(Icons.keyboard_arrow_left),
                   ),
                   FloatingActionButton(
-                    onPressed: () =>
-                        controller.swipe(CardSwiperDirection.right),
+                    onPressed: () => controller.swipe(CardSwiperDirection.right),
                     child: const Icon(Icons.keyboard_arrow_right),
                   ),
                   FloatingActionButton(
@@ -79,8 +79,7 @@ class _ExamplePageState extends State<Example> {
                     child: const Icon(Icons.keyboard_arrow_up),
                   ),
                   FloatingActionButton(
-                    onPressed: () =>
-                        controller.swipe(CardSwiperDirection.bottom),
+                    onPressed: () => controller.swipe(CardSwiperDirection.bottom),
                     child: const Icon(Icons.keyboard_arrow_down),
                   ),
                 ],

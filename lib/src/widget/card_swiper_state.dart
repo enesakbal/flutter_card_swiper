@@ -107,6 +107,31 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
   }
 
   Widget _frontItem(BoxConstraints constraints) {
+    // Calculate swipe progress percentage (0-100)
+    final thresholdInPixels = constraints.maxWidth * widget.threshold / 100;
+    final swipeDistance = math.sqrt(
+      _cardAnimation.left * _cardAnimation.left +
+          _cardAnimation.top * _cardAnimation.top,
+    );
+    
+    // Only calculate and send values if card is actually being swiped (distance > 1 pixel)
+    final isSwiping = swipeDistance > 1.0;
+    
+    double? swipeProgressPercentage;
+    CardSwiperDirection? swipeDirection;
+    
+    if (isSwiping) {
+      swipeProgressPercentage = math.min(
+        100.0,
+        (swipeDistance / thresholdInPixels) * 100,
+      ).clamp(0.0, 100.0);
+      
+      // Calculate angle in degrees
+      final angleInRadians = math.atan2(_cardAnimation.top, _cardAnimation.left);
+      final angleInDegrees = (angleInRadians * 180 / math.pi + 90) % 360;
+      swipeDirection = CardSwiperDirection.custom(angleInDegrees);
+    }
+
     return Positioned(
       left: _cardAnimation.left,
       top: _cardAnimation.top,
@@ -118,8 +143,9 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
             child: widget.cardBuilder(
               context,
               _currentIndex!,
-              (100 * _cardAnimation.left / widget.threshold).ceil(),
-              (100 * _cardAnimation.top / widget.threshold).ceil(),
+              true,
+              swipeProgressPercentage,
+              swipeDirection,
             ),
           ),
         ),
@@ -193,7 +219,13 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
         scale: _cardAnimation.scale - ((1 - widget.scale) * (index - 1)),
         child: ConstrainedBox(
           constraints: constraints,
-          child: widget.cardBuilder(context, cardIndex, 0, 0),
+          child: widget.cardBuilder(
+            context,
+            cardIndex,
+            false,
+            null,
+            null,
+          ),
         ),
       ),
     );
