@@ -1,7 +1,6 @@
 part of 'card_swiper.dart';
 
-class _CardSwiperState<T extends Widget> extends State<CardSwiper>
-    with SingleTickerProviderStateMixin {
+class _CardSwiperState<T extends Widget> extends State<CardSwiper> with SingleTickerProviderStateMixin {
   late CardAnimation _cardAnimation;
   late AnimationController _animationController;
 
@@ -31,8 +30,7 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
 
     _undoableIndex.state = widget.initialIndex;
 
-    controllerSubscription =
-        widget.controller?.events.listen(_controllerListener);
+    controllerSubscription = widget.controller?.events.listen(_controllerListener);
 
     _animationController = AnimationController(
       duration: widget.duration,
@@ -55,8 +53,7 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
   void didUpdateWidget(CardSwiper oldWidget) {
     super.didUpdateWidget(oldWidget);
     controllerSubscription?.cancel();
-    controllerSubscription =
-        widget.controller?.events.listen(_controllerListener);
+    controllerSubscription = widget.controller?.events.listen(_controllerListener);
   }
 
   void onSwipeDirectionChanged(CardSwiperDirection direction) {
@@ -72,8 +69,7 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
         _detectedVerticalDirection = direction;
     }
 
-    widget.onSwipeDirectionChange
-        ?.call(_detectedHorizontalDirection, _detectedVerticalDirection);
+    widget.onSwipeDirectionChange?.call(_detectedHorizontalDirection, _detectedVerticalDirection);
   }
 
   @override
@@ -106,26 +102,63 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
     );
   }
 
+  void _updateSwipeProgress(BoxConstraints constraints) {
+    if (widget.controller == null) return;
+
+    final thresholdInPixels = constraints.maxWidth * widget.threshold / 100;
+    final swipeDistance = math.sqrt(
+      _cardAnimation.left * _cardAnimation.left + _cardAnimation.top * _cardAnimation.top,
+    );
+
+    // Only calculate and send values if card is actually being swiped (distance > 1 pixel)
+    final isSwiping = swipeDistance > 1.0;
+
+    double? swipeProgressPercentage;
+    CardSwiperDirection? swipeDirection;
+
+    if (isSwiping) {
+      swipeProgressPercentage = math
+          .min(
+            100.0,
+            (swipeDistance / thresholdInPixels) * 100,
+          )
+          .clamp(0.0, 100.0);
+
+      // Calculate angle in degrees
+      final angleInRadians = math.atan2(_cardAnimation.top, _cardAnimation.left);
+      final angleInDegrees = (angleInRadians * 180 / math.pi + 90) % 360;
+      swipeDirection = CardSwiperDirection.custom(angleInDegrees);
+    }
+
+    widget.controller!.updateProgress(
+      SwipeProgress(
+        progressPercentage: swipeProgressPercentage,
+        direction: swipeDirection,
+      ),
+    );
+  }
+
   Widget _frontItem(BoxConstraints constraints) {
     // Calculate swipe progress percentage (0-100)
     final thresholdInPixels = constraints.maxWidth * widget.threshold / 100;
     final swipeDistance = math.sqrt(
-      _cardAnimation.left * _cardAnimation.left +
-          _cardAnimation.top * _cardAnimation.top,
+      _cardAnimation.left * _cardAnimation.left + _cardAnimation.top * _cardAnimation.top,
     );
-    
+
     // Only calculate and send values if card is actually being swiped (distance > 1 pixel)
     final isSwiping = swipeDistance > 1.0;
-    
+
     double? swipeProgressPercentage;
     CardSwiperDirection? swipeDirection;
-    
+
     if (isSwiping) {
-      swipeProgressPercentage = math.min(
-        100.0,
-        (swipeDistance / thresholdInPixels) * 100,
-      ).clamp(0.0, 100.0);
-      
+      swipeProgressPercentage = math
+          .min(
+            100.0,
+            (swipeDistance / thresholdInPixels) * 100,
+          )
+          .clamp(0.0, 100.0);
+
       // Calculate angle in degrees
       final angleInRadians = math.atan2(_cardAnimation.top, _cardAnimation.left);
       final angleInDegrees = (angleInRadians * 180 / math.pi + 90) % 360;
@@ -173,20 +206,20 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
 
               if (widget.showBackCardOnUndo) {
                 final shouldShowPreviousCard = switch (widget.undoDirection) {
-                  UndoDirection.left =>
-                    _cardAnimation.left < -widget.undoSwipeThreshold,
-                  UndoDirection.right =>
-                    _cardAnimation.left > widget.undoSwipeThreshold,
+                  UndoDirection.left => _cardAnimation.left < -widget.undoSwipeThreshold,
+                  UndoDirection.right => _cardAnimation.left > widget.undoSwipeThreshold,
                 };
 
                 if (shouldShowPreviousCard) {
-                  _backgroundCardIndex =
-                      _undoableIndex.previousState ?? getValidIndexOffset(-1);
+                  _backgroundCardIndex = _undoableIndex.previousState ?? getValidIndexOffset(-1);
                 } else {
                   _backgroundCardIndex = _nextIndex;
                 }
               }
             });
+
+            // Update controller with swipe progress after setState
+            _updateSwipeProgress(constraints);
           }
         },
         onPanEnd: (tapInfo) {
@@ -260,9 +293,7 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
 
   Future<void> _handleCompleteSwipe() async {
     final isLastCard = _currentIndex! == widget.cardsCount - 1;
-    final shouldCancelSwipe = await widget.onSwipe
-            ?.call(_currentIndex!, _nextIndex, _detectedDirection) ==
-        false;
+    final shouldCancelSwipe = await widget.onSwipe?.call(_currentIndex!, _nextIndex, _detectedDirection) == false;
 
     if (shouldCancelSwipe) {
       return;
@@ -281,6 +312,11 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
     _detectedDirection = CardSwiperDirection.none;
 
     _backgroundCardIndex = null;
+
+    // Reset controller progress
+    widget.controller?.updateProgress(
+      const SwipeProgress(),
+    );
 
     setState(() {
       _animationController.reset();
@@ -302,14 +338,10 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
 
   CardSwiperDirection _getEndAnimationDirection() {
     if (_cardAnimation.left.abs() > widget.threshold) {
-      return _cardAnimation.left.isNegative
-          ? CardSwiperDirection.left
-          : CardSwiperDirection.right;
+      return _cardAnimation.left.isNegative ? CardSwiperDirection.left : CardSwiperDirection.right;
     }
     if (_cardAnimation.top.abs() > widget.threshold) {
-      return _cardAnimation.top.isNegative
-          ? CardSwiperDirection.top
-          : CardSwiperDirection.bottom;
+      return _cardAnimation.top.isNegative ? CardSwiperDirection.top : CardSwiperDirection.bottom;
     }
     return CardSwiperDirection.none;
   }
@@ -333,6 +365,10 @@ class _CardSwiperState<T extends Widget> extends State<CardSwiper>
 
   void _goBack() {
     _swipeType = SwipeType.back;
+    // Reset controller progress when going back
+    widget.controller?.updateProgress(
+      const SwipeProgress(),
+    );
     _cardAnimation.animateBack(context);
   }
 

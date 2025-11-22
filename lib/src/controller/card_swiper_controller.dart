@@ -1,11 +1,20 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter_card_swiper/src/controller/controller_event.dart';
+import 'package:flutter_card_swiper/src/controller/swipe_progress.dart';
 
-/// A controller that can be used to trigger swipes on a CardSwiper widget.
-class CardSwiperController {
+/// A controller that can be used to trigger swipes on a CardSwiper widget
+/// and listen to swipe progress updates.
+class CardSwiperController extends ValueNotifier<SwipeProgress> {
   final _eventController = StreamController<ControllerEvent>.broadcast();
+
+  CardSwiperController()
+      : super(const SwipeProgress(
+          progressPercentage: null,
+          direction: null,
+        ));
 
   /// Stream of events that can be used to swipe the card.
   Stream<ControllerEvent> get events => _eventController.stream;
@@ -25,7 +34,14 @@ class CardSwiperController {
     _eventController.add(ControllerMoveEvent(index));
   }
 
+  /// Update the swipe progress. This is called internally by CardSwiper.
+  void updateProgress(SwipeProgress progress) {
+    value = progress;
+  }
+
+  @override
   Future<void> dispose() async {
     await _eventController.close();
+    super.dispose();
   }
 }
