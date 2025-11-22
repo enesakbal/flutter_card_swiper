@@ -16,7 +16,8 @@ class CardSwiper extends StatefulWidget {
   /// Function that builds each card in the stack.
   ///
   /// The function is called with the index of the card to be built, the build context, a boolean
-  /// indicating whether this card is the top card in the stack, the swipe progress percentage
+  /// indicating whether this card is the top card in the stack, a boolean indicating whether this card
+  /// is the next card in the stack, the swipe progress percentage
   /// (0-100) indicating how far the top card has been swiped from its center position relative to
   /// the threshold (null when card is not being swiped), and the direction in which the card is
   /// being swiped (null when card is not being swiped).

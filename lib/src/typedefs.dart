@@ -18,6 +18,7 @@ typedef NullableCardBuilder = Widget? Function(
   BuildContext context,
   int index,
   bool isTopIndex,
+  bool isNextIndex,
   double? swipeProgressPercentage,
   CardSwiperDirection? swipeDirection,
 );

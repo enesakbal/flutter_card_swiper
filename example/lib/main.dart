@@ -51,6 +51,7 @@ class _ExamplePageState extends State<Example> {
                   context,
                   index,
                   isTopIndex,
+                  isNextIndex,
                   swipeProgressPercentage,
                   swipeDirection,
                 ) =>

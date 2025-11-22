@@ -5,6 +5,7 @@ Widget? genericBuilder(
   BuildContext context,
   int index,
   bool isTopIndex,
+  bool isNextIndex,
   double? swipeProgressPercentage,
   CardSwiperDirection? swipeDirection,
 ) {
